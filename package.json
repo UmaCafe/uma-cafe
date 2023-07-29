@@ -15,5 +15,8 @@
     "astro": "^2.9.3",
     "tsparticles": "^2.11.1",
     "tsparticles-engine": "^2.11.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.5"
   }
 }

@@ -1,10 +1,12 @@
 import { authentication, createDirectus, rest } from "@directus/sdk";
 import type { Database } from "./database";
 
-export const directus = createDirectus<Database>("http://192.168.0.62:8055")
+export const directus = createDirectus<Database>(
+    import.meta.env.DIRECTUS_ENDPOINT
+)
     .with(rest())
     .with(authentication());
-directus.setToken("0_M7pJ2Gv23z0HTODw-LRzC9M3hynC-K");
+directus.setToken(import.meta.env.DIRECTUS_TOKEN);
 
 export function forceObj<T, IDT extends string | number>(
     obj: T | IDT

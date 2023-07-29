@@ -9,14 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      - run: npm ci --production
+      - run: npm ci --omit=dev
       - run: npm run build
-      - name: Upload
-        uses: andreiio/rclone-action@v1
+        env:
+          DIRECTUS_ENDPOINT: https://admin.uma.cafe
+          DIRECTUS_TOKEN: ${{ secrets.DIRECTUS_TOKEN }}
+      - uses: andreiio/rclone-action@v1
         with:
           args: sync dist r2:uma-cafe-main
         env:
