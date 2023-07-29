@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  push:
+    branches: master
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - run: npm ci --production
+      - run: npm run build
+      - name: Rclone Setup
+        uses: NiceLabs/rclone-action@master
+        with:
+          github-token: ${{ secrets.SECRET_TOKEN }}
+          config: ${{ secrets.RCLONE_CONFIG }}
+          config-secret-name: RCLONE_CONFIG
+      - name: Upload
+        run: rclone sync ./dist r2:uma-cafe-main
+        env:
+          RCLONE_CONFIG_PASS: ${{ secrets.RCLONE_CONFIG_PASS }}
