@@ -1,0 +1,36 @@
+---
+import { readItems } from "@directus/sdk";
+import Layout from "@layouts/Layout.astro";
+import { directus } from "@lib/cms";
+import type { Page } from "@lib/database";
+import { Marked } from "@ts-stack/markdown";
+import type { GetStaticPaths } from "astro";
+
+export type Props = {
+    page: Page;
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    const pages = await directus.request(readItems("pages", { fields: ["*"] }));
+    return pages.map((page) => {
+        let path: string | undefined = page.id ?? "/";
+        if (path.startsWith("/")) path = path.replace("/", "");
+        if (path.length == 0) path = undefined;
+        return {
+            params: {
+                path,
+            },
+            props: {
+                page,
+            },
+        };
+    });
+};
+
+const { page } = Astro.props;
+const rendered = Marked.parse(page.content);
+---
+
+<Layout title={page.title} description={page.description}>
+    <div set:html={rendered} />
+</Layout>

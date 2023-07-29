@@ -1,0 +1,186 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import ParticlesComponent from "@components/ParticlesComponent.astro";
+
+export type Props = {
+    title: string;
+    description?: string | undefined;
+    image?: string | undefined;
+};
+---
+
+<BaseLayout {...Astro.props}>
+    <nav>
+        <header class="container">
+            <div class="brand"><a href="/">UmaCafe</a></div>
+            <div class="links">
+                <div class="link">
+                    <a href="/characters">Characters</a>
+                </div>
+            </div>
+        </header>
+    </nav>
+
+    <main>
+        <div class="container content-box">
+            <div class="content">
+                <slot />
+            </div>
+            <footer>
+                <hr />
+                <div class="footer-content">
+                    <div class="left">
+                        <a href="mailto:help@uma.cafe">Contact</a>
+                    </div>
+                    <div class="right">
+                        <a href="/editor/login">Editor Login</a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <div class="background">
+        <ParticlesComponent />
+    </div>
+</BaseLayout>
+
+<style>
+    .container {
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 0;
+        box-sizing: border-box;
+    }
+
+    @media (min-width: 600px) {
+        .container {
+            max-width: 600px;
+        }
+    }
+
+    @media (min-width: 800px) {
+        .container {
+            max-width: 800px;
+        }
+    }
+
+    @media (min-width: 1000px) {
+        .container {
+            max-width: 1000px;
+        }
+    }
+
+    .content-box {
+        position: relative;
+        background-color: #f5f5ff;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        box-shadow: 10px 10px 20px #ccd, -10px 10px 20px #ccd;
+        color: #222;
+        width: 100%;
+        padding: 0 1rem;
+        flex-grow: 1;
+    }
+
+    @media (max-width: 768px) {
+        .content-box {
+            padding: 0 0.5rem;
+        }
+    }
+
+    .content {
+        display: inline-block;
+        width: 100%;
+        padding-bottom: 4rem;
+    }
+
+    nav .container {
+        display: flex;
+        flex-direction: row;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    footer {
+        position: absolute;
+        bottom: 10px;
+        left: 0;
+        width: 100%;
+        height: 3rem;
+    }
+
+    footer hr {
+        width: 95%;
+    }
+
+    .footer-content {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .footer-content .left {
+        margin-left: 2rem;
+    }
+
+    .footer-content .right {
+        align-self: flex-end;
+        margin-left: auto;
+        margin-right: 2rem;
+    }
+
+    .brand a {
+        font-size: 2rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: #575;
+    }
+
+    .links {
+        display: flex;
+        margin-left: auto;
+    }
+
+    .links .link {
+        margin: 0.5rem;
+        align-self: flex-end;
+    }
+
+    .link a {
+        color: #494;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .link a:hover {
+        text-decoration: underline;
+    }
+
+    main {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .background {
+        position: fixed;
+        display: block;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+        background-image: url(/background/bg_main.jpg);
+        background-position: 50% 0;
+        background-repeat: repeat;
+        padding: 0;
+        margin: 0;
+    }
+
+    :global(body.dark) .background {
+        background-image: url(/background/bg_dark.jpg);
+    }
+</style>

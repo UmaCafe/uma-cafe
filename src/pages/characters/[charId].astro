@@ -1,0 +1,647 @@
+---
+import InfoPanel from "@components/InfoPanel.astro";
+import TabBox from "@components/TabBox.astro";
+import { readItems } from "@directus/sdk";
+import Layout from "@layouts/Layout.astro";
+import { asset, file } from "@lib/cdn";
+import { directus, forceObj } from "@lib/cms";
+import type { CharacterTranslation } from "@lib/database";
+import { MONTHS, ordinalNumber } from "@lib/util";
+import type { GetStaticPaths } from "astro";
+
+export async function getChars() {
+    return directus.request(
+        readItems("characters", {
+            fields: [
+                "*",
+                {
+                    translations: ["*"],
+                    roommate: ["name_en", "visible", "id"],
+                    seiyuu: ["*", { pic: ["filename_disk"] }],
+                    counterpart: ["*", { pic: ["filename_disk"] }],
+                    voice: ["filename_disk"],
+                },
+            ],
+            filter: {
+                visible: {
+                    _eq: true,
+                },
+            },
+        })
+    );
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    const characters = await getChars();
+    return characters.map((character) => ({
+        params: { charId: character.id },
+        props: { character },
+    }));
+};
+
+export type Props = {
+    character: Awaited<ReturnType<typeof getChars>>[0];
+};
+const { character } = Astro.props;
+
+let en: CharacterTranslation | undefined = undefined;
+let jp: CharacterTranslation | undefined = undefined;
+for (const tlR of character.translations ?? []) {
+    const tl = forceObj(tlR);
+    if (tl.languages_id == "ja-JP") jp = tl;
+    if (tl.languages_id == "en-US") en = tl;
+}
+
+function title(k: string): string {
+    return k.charAt(0).toUpperCase() + k.substring(1).toLowerCase();
+}
+
+const preferredGround = character.prefers
+    .filter((v) => v == "turf" || v == "dirt")
+    .map(title)
+    .join(", ");
+const preferredDistance = character.prefers
+    .filter((v) => v == "short" || v == "mile" || v == "mid" || v == "long")
+    .map(title)
+    .join(", ");
+const preferredStrategy = character.prefers
+    .filter(
+        (v) =>
+            v == "escape" || v == "leader" || v == "betweener" || v == "chaser"
+    )
+    .map(title)
+    .join(", ");
+
+const seiyuu = forceObj(character.seiyuu);
+const seiyuuNameEN = seiyuu
+    ? seiyuu.use_full_name
+        ? seiyuu.full_name
+        : seiyuu.given_name + " " + seiyuu.family_name
+    : undefined;
+
+const counterpart = forceObj(character.counterpart);
+
+const imageTabs: { key: string; val: string; url: string }[] = [];
+if (character.seifuku)
+    imageTabs.push({
+        key: "seifuku",
+        val: "Uniform",
+        url: await asset(character.seifuku),
+    });
+if (character.shoubufuku)
+    imageTabs.push({
+        key: "shoubufuku",
+        val: "Racing Outfit (Game)",
+        url: await asset(character.shoubufuku),
+    });
+if (character.proto)
+    imageTabs.push({
+        key: "proto",
+        val: "Racing Outfit (Original)",
+        url: await asset(character.proto),
+    });
+if (character.stage)
+    imageTabs.push({
+        key: "stage",
+        val: "Starting Future",
+        url: await asset(character.stage),
+    });
+
+const descTabs: { key: string; val: string }[] = [
+    { val: "Character Bio", key: "bio" },
+    { val: "Voice", key: "voice" },
+    { val: "Real-life Counterpart", key: "counterpart" },
+].filter((v) => {
+    if (v.key == "voice") return character.seiyuu;
+    if (v.key == "counterpart") return character.counterpart;
+    return true;
+});
+---
+
+<Layout
+    title={character.name_en}
+    description={en?.about ??
+        `Information about ${character.name_en} from Uma Musume`}
+    image={await asset(character.icon)}
+>
+    <InfoPanel
+        mainColor={character.main_color}
+        subColor={character.secondary_color}
+        topBackgroundColor="#f5f5ff"
+        bottomBackgroundColor="#e9e9f9"
+    >
+        <div class="title-container" slot="title">
+            <div class="title-box">
+                <h1>
+                    <ruby>{character.name_en}<rt>{character.name_jp}</rt></ruby>
+                </h1>
+                {en?.epithet ? <h3>"{en.epithet}"</h3> : undefined}
+            </div>
+        </div>
+        <div class="intro-box">
+            {
+                en?.introduction ? (
+                    <p class="intro">
+                        <em>"{en.introduction}"</em>
+                    </p>
+                ) : undefined
+            }
+        </div>
+        <div class="image">
+            <TabBox tabs={imageTabs} outlineColor={character.secondary_color}>
+                {
+                    imageTabs.map((tab) => (
+                        <div class="image-container" data-key={tab.key}>
+                            <img src={tab.url} alt={character.name_en} />
+                        </div>
+                    ))
+                }
+            </TabBox>
+        </div>
+        <div class="desc">
+            <TabBox tabs={descTabs} outlineColor={character.secondary_color}>
+                <div data-key="bio">
+                    {
+                        en?.tagline ? (
+                            <>
+                                <p class="tagline">{en.tagline}</p>
+                                <hr class="about-hr" />
+                            </>
+                        ) : undefined
+                    }
+                    {
+                        en?.about ? (
+                            <>
+                                <p class="about">{en.about}</p>
+                                <hr class="about-hr" />
+                            </>
+                        ) : undefined
+                    }
+                    <TabBox
+                        tabs={[
+                            { val: "Profile", key: "profile" },
+                            { val: "Trainers' Notes", key: "notes" },
+                        ]}
+                        panelColor={character.secondary_color}
+                    >
+                        <div data-key="profile">
+                            {
+                                character.birth_day && character.birth_month ? (
+                                    <p>
+                                        <strong>Birthday:</strong>
+                                        {MONTHS.get(character.birth_month) ??
+                                            ""}
+                                        {character.birth_day}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                character.class ? (
+                                    <p>
+                                        <strong>Class:</strong>{" "}
+                                        {title(character.class) + " School"}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                character.dorm ? (
+                                    <p>
+                                        <strong>Dorm:</strong>{" "}
+                                        {title(character.dorm)}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                character.roommate &&
+                                typeof character.roommate !== "string" ? (
+                                    <p>
+                                        <strong>Roommate:</strong>
+                                        {character.roommate.visible ? (
+                                            <a
+                                                href={`/characters/${character.roommate.id}`}
+                                            >
+                                                {character.roommate.name_en}
+                                            </a>
+                                        ) : (
+                                            `${character.roommate.name_en}`
+                                        )}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.strengths ? (
+                                    <p>
+                                        <strong>Strengths:</strong>{" "}
+                                        {en.strengths}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.weaknesses ? (
+                                    <p>
+                                        <strong>Weaknesses:</strong>{" "}
+                                        {en.weaknesses}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.comment_ears ? (
+                                    <p>
+                                        <strong>Ears:</strong> {en.comment_ears}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.comment_tail ? (
+                                    <p>
+                                        <strong>Tail:</strong> {en.comment_tail}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.comment_family ? (
+                                    <p>
+                                        <strong>Family:</strong>{" "}
+                                        {en.comment_family}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.secrets?.length ?? 0 > 0 ? (
+                                    <>
+                                        <p>
+                                            <strong>Secrets:</strong>
+                                        </p>
+                                        <ul>
+                                            {en?.secrets.map((secret) => (
+                                                <li>{secret.secret}</li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                ) : undefined
+                            }
+                            {
+                                character.trivia?.length ?? 0 > 0 ? (
+                                    <>
+                                        <p>
+                                            <strong>Trivia:</strong>
+                                        </p>
+                                        <ul>
+                                            {character.trivia.map((trivia) => (
+                                                <li>{trivia.trivia}</li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                ) : undefined
+                            }
+                        </div>
+                        <div data-key="notes">
+                            {
+                                character.height ? (
+                                    <p>
+                                        <strong>Height:</strong>{" "}
+                                        {character.height}cm
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                character.bust &&
+                                character.waist &&
+                                character.hips ? (
+                                    <p>
+                                        <strong>Three Sizes:</strong>{" "}
+                                        {`B${character.bust} W${character.waist} H${character.hips}`}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                character.shoe_left && character.shoe_right ? (
+                                    <p>
+                                        <strong>Shoe Size:</strong>
+                                        {character.shoe_left !=
+                                        character.shoe_right
+                                            ? `L${character.shoe_left}cm, R${character.shoe_right}cm`
+                                            : `${character.shoe_left}cm`}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.weight ? (
+                                    <p>
+                                        <strong>Weight:</strong> {en.weight}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                preferredGround.length > 0 ? (
+                                    <p>
+                                        <strong>Preferred Ground:</strong>{" "}
+                                        {preferredGround}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                preferredDistance.length > 0 ? (
+                                    <p>
+                                        <strong>Preferred Distance:</strong>{" "}
+                                        {preferredDistance}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                preferredStrategy.length > 0 ? (
+                                    <p>
+                                        <strong>Preferred Strategy:</strong>{" "}
+                                        {preferredStrategy}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.refers_self ? (
+                                    <p>
+                                        <strong>Calls self:</strong>
+                                        {en.refers_self}
+                                        {jp?.refers_self
+                                            ? `(${jp.refers_self})`
+                                            : undefined}
+                                    </p>
+                                ) : undefined
+                            }
+                            {
+                                en?.refers_trainer ? (
+                                    <p>
+                                        <strong>Calls Trainer:</strong>
+                                        {en.refers_trainer}
+                                        {jp?.refers_trainer
+                                            ? `(${jp.refers_trainer})`
+                                            : undefined}
+                                    </p>
+                                ) : undefined
+                            }
+                        </div>
+                    </TabBox>
+                </div>
+                <div data-key="voice">
+                    {
+                        character.voice ? (
+                            <div class="voice-box">
+                                <audio controls src={file(character.voice)}>
+                                    <track kind="captions" />
+                                </audio>
+                            </div>
+                        ) : undefined
+                    }
+                    <p class="center">
+                        <strong>Voiced by:</strong>
+                        {seiyuuNameEN}
+                        {
+                            seiyuuNameEN != seiyuu?.name_jp
+                                ? `(${seiyuu?.name_jp})`
+                                : undefined
+                        }
+                    </p>
+                    {
+                        seiyuu?.pic ? (
+                            <div class="img-seiyuu center img-box">
+                                <img
+                                    src={file(seiyuu.pic)}
+                                    alt={seiyuuNameEN}
+                                />
+                            </div>
+                        ) : undefined
+                    }
+                    <p class="links">
+                        {
+                            seiyuu?.wikipedia_jp ? (
+                                <a href={seiyuu.wikipedia_jp}>Wiki (JP)</a>
+                            ) : undefined
+                        }
+                        {
+                            seiyuu?.wikipedia_en ? (
+                                <a href={seiyuu.wikipedia_en}>Wiki (EN)</a>
+                            ) : undefined
+                        }
+                        {
+                            seiyuu?.anilist ? (
+                                <a href={seiyuu.anilist}>Anilist</a>
+                            ) : undefined
+                        }
+                        {seiyuu?.mal ? <a href={seiyuu.mal}>MAL</a> : undefined}
+                        {
+                            seiyuu?.socials?.length ?? 0 > 0
+                                ? seiyuu?.socials.map((social) => (
+                                      <a href={social.link}>{social.name}</a>
+                                  ))
+                                : undefined
+                        }
+                    </p>
+                    {
+                        seiyuu?.notable_roles?.length ?? 0 > 0 ? (
+                            <>
+                                <p>
+                                    <strong>Other Roles:</strong>
+                                </p>
+                                <ul>
+                                    {seiyuu?.notable_roles.map((role) => (
+                                        <li>
+                                            {role.character} ({role.media})
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        ) : undefined
+                    }
+                </div>
+                <div data-key="counterpart">
+                    {
+                        counterpart?.pic ? (
+                            <div class="center img-box">
+                                <img
+                                    src={file(counterpart.pic)}
+                                    alt={counterpart.name_en}
+                                />
+                            </div>
+                        ) : undefined
+                    }
+                    {
+                        counterpart?.sex ? (
+                            <p>
+                                <strong>Sex:</strong>
+                                {title(counterpart.sex)}
+                            </p>
+                        ) : undefined
+                    }
+                    {
+                        counterpart?.num_races &&
+                        typeof counterpart.num_wins != "undefined" ? (
+                            <p>
+                                <strong>Record:</strong>
+                                {counterpart.num_races} Races,{" "}
+                                {counterpart.num_wins} Wins
+                            </p>
+                        ) : undefined
+                    }
+                    {
+                        counterpart?.notable_results?.length ?? 0 > 0 ? (
+                            <>
+                                <p>
+                                    <strong>Notable Races:</strong>
+                                </p>
+                                <ul>
+                                    {counterpart?.notable_results.map(
+                                        (result) => (
+                                            <li>
+                                                {`${ordinalNumber(
+                                                    result.placed
+                                                )} - ${result.race_name} (${
+                                                    result.race_year
+                                                })`}
+                                            </li>
+                                        )
+                                    )}
+                                </ul>
+                            </>
+                        ) : undefined
+                    }
+                    <p class="links">
+                        {
+                            counterpart?.wikipedia_jp ? (
+                                <a href={counterpart.wikipedia_jp}>Wiki (JP)</a>
+                            ) : undefined
+                        }
+                        {
+                            counterpart?.wikipedia_en ? (
+                                <a href={counterpart.wikipedia_en}>Wiki (EN)</a>
+                            ) : undefined
+                        }
+                        {
+                            counterpart?.netkeiba ? (
+                                <a href={counterpart.netkeiba}>Netkeiba</a>
+                            ) : undefined
+                        }
+                    </p>
+                </div>
+            </TabBox>
+        </div>
+    </InfoPanel>
+</Layout>
+
+<style>
+    .image {
+        padding: 20px;
+        flex-grow: 1;
+        border-radius: 10px;
+    }
+
+    @media (min-width: 768px) {
+        .image {
+            flex-basis: 0;
+        }
+    }
+
+    .image-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-top: 176%; /* h/w: 1320/750 */
+    }
+
+    .image-container img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+    }
+
+    .title-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .title-box {
+        padding: 10px 15px;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .desc {
+        flex-basis: 0;
+        flex-grow: 1;
+        padding: 20px;
+        margin-bottom: 0;
+    }
+
+    .intro-box {
+        width: 100%;
+        margin: 0px 15px;
+    }
+
+    .intro {
+        max-width: 500px;
+        margin: 0 auto;
+        font-size: large;
+        background-color: #f5f5ff;
+        margin: 20px auto;
+        padding: 10px 15px;
+        border: 2px solid var(--color-sub);
+        box-shadow: 0px 0px 0px 5px #f5f5ff;
+        border-radius: 20px;
+    }
+
+    .tagline {
+        font-style: italic;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .about-hr {
+        margin: 10px 0px;
+    }
+
+    .img-box img {
+        border-radius: 8px;
+        max-width: 100%;
+    }
+
+    .img-seiyuu img {
+        max-height: 200px;
+    }
+
+    .voice-box {
+        padding: 20px 0px;
+        text-align: center;
+    }
+
+    .voice-box audio {
+        max-width: 100%;
+        border-radius: 15px;
+    }
+
+    .links {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .links a {
+        padding-right: 10px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    h1,
+    h3 {
+        margin: 10px 0;
+    }
+
+    p {
+        margin: 5px 0;
+    }
+
+    ul {
+        margin: 0;
+    }
+</style>

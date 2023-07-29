@@ -1,0 +1,227 @@
+---
+export interface Props {
+    tabs: { key: string; val: string }[];
+    panelColor?: string | undefined;
+    outlineColor?: string | undefined;
+    fontColor?: string | undefined;
+    backgroundColor?: string | undefined;
+}
+
+const {
+    tabs,
+    panelColor = "#282",
+    outlineColor = "#282",
+    fontColor = "#000",
+    backgroundColor = "#f5f5ff",
+    ...rest
+} = Astro.props;
+
+const isPanel = !!Astro.props.panelColor;
+---
+
+<div
+    class={isPanel ? "tab-panel" : "tab-box"}
+    style={isPanel
+        ? `--panel-color: ${panelColor};`
+        : `--outline-color: ${outlineColor};
+           --font-color: ${fontColor};
+           --background-color: ${backgroundColor};`}
+    data-tab
+    {...rest}
+>
+    <ul class="tab-list">
+        {
+            tabs.map((tab, i) => (
+                <li data-key={tab.key} class={i == 0 ? "active" : ""}>
+                    <button class="tab-button">{tab.val}</button>
+                    {isPanel ? undefined : <div class="extra" />}
+                </li>
+            ))
+        }
+    </ul>
+    <div class="tab-content">
+        <slot />
+    </div>
+</div>
+
+<script>
+    function matchKey(
+        parent: Element,
+        search: string,
+        key: string,
+        matched: (el: HTMLElement) => void,
+        unmatched: (el: HTMLElement) => void
+    ) {
+        for (const element of parent.querySelectorAll(search)) {
+            const el = element as HTMLElement;
+            if (el.closest("[data-tab]") != parent) continue;
+            if (el.dataset.key == key) {
+                matched(el);
+            } else {
+                unmatched(el);
+            }
+        }
+    }
+
+    for (const buttonRaw of document.querySelectorAll(".tab-button")) {
+        const button = buttonRaw as HTMLButtonElement;
+
+        const key = button.parentElement?.dataset.key;
+        const parent = button.closest("div[data-tab]");
+        if (key && parent) {
+            button.onclick = () => {
+                matchKey(
+                    parent,
+                    ".tab-list>li[data-key]",
+                    key,
+                    (el) => el.classList.add("active"),
+                    (el) => el.classList.remove("active")
+                );
+
+                matchKey(
+                    parent,
+                    ".tab-content>*[data-key]",
+                    key,
+                    (el) => (el.style.display = "inherit"),
+                    (el) => (el.style.display = "")
+                );
+            };
+            if (button.parentElement.classList.contains("active")) {
+                button.click();
+            }
+        }
+    }
+</script>
+
+<style>
+    .tab-content > :global(*[data-key]) {
+        display: none;
+    }
+
+    .tab-box > .tab-list {
+        display: flex;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        align-items: stretch;
+        z-index: 1;
+    }
+
+    .tab-box > .tab-list li {
+        flex-basis: 0;
+        flex-grow: 1;
+        margin-right: 3px;
+        transform-origin: bottom;
+        transform: scale(1);
+        transition: transform 0.15s cubic-bezier(0.075, 0.82, 0.165, 1);
+    }
+
+    .tab-box > .tab-list li:hover,
+    .tab-box > .tab-list li.active {
+        transform: scale(1, 0.9);
+    }
+
+    .tab-box > .tab-list li:last-of-type {
+        margin-right: 0px;
+    }
+
+    .tab-box > .tab-list button {
+        padding: 10px 8px 8px;
+        width: 100%;
+        height: 100%;
+        border: 2px solid var(--background-color);
+        border-bottom-width: 0px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        color: var(--font-color);
+        background-color: #d2d2e4;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .tab-box > .tab-list li.active button {
+        position: relative;
+        background-color: var(--background-color);
+    }
+
+    .tab-box > .tab-list li.active .extra {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: calc(100% - 14px);
+        height: calc(100% - 1px);
+        border: 2px solid var(--outline-color);
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        z-index: 10;
+    }
+
+    .tab-box > .tab-list li.active .extra::after {
+        content: "";
+        position: absolute;
+        bottom: -3px;
+        left: 0px;
+        width: calc(100%);
+        height: 6px;
+        background-color: var(--background-color);
+        z-index: 11;
+    }
+
+    .tab-box > .tab-content {
+        position: relative;
+        padding: 20px 15px;
+        border: 0px solid black;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        background-color: var(--background-color);
+    }
+
+    .tab-box > .tab-content::after {
+        content: "";
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: calc(100% - 14px);
+        height: calc(100% - 14px);
+        background-color: transparent;
+        border: 2px solid var(--outline-color);
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+        pointer-events: none;
+    }
+
+    .tab-panel > .tab-list {
+        display: flex;
+        list-style: none;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 10px;
+        justify-content: center;
+    }
+
+    .tab-panel > .tab-list li {
+        flex-basis: 0;
+        min-width: 33%;
+    }
+
+    .tab-panel > .tab-list li button {
+        padding: 5px;
+        width: 100%;
+        height: 100%;
+        background-color: transparent;
+        border: none;
+        font-weight: bold;
+    }
+
+    .tab-panel > .tab-list button:hover {
+        background-color: #ddd;
+    }
+
+    .tab-panel > .tab-list li.active::after {
+        display: block;
+        content: "";
+        border-bottom: 4px solid var(--panel-color);
+    }
+</style>
