@@ -3,7 +3,10 @@ name: Deploy to Pages
 on:
   push:
     branches: ["master"]
+    paths: ["src/**", "public/**", "astro.config.mjs", "package-lock.json"]
   workflow_dispatch:
+  repository_dispatch:
+    types: [do_build]
 
 permissions:
   contents: read
