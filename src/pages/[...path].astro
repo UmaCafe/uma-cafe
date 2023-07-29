@@ -34,3 +34,9 @@ const rendered = Marked.parse(page.content);
 <Layout title={page.title} description={page.description}>
     <div set:html={rendered} />
 </Layout>
+
+<style>
+    div :global(img) {
+        max-width: 100%;
+    }
+</style>
