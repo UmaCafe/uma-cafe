@@ -1,27 +1,53 @@
-name: Build
+name: Deploy to Pages
 
 on:
   push:
-    branches: master
+    branches: ["master"]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-      - run: npm ci --omit=dev
-      - run: npm run build
+          node-version: "16.x"
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v3
+      - name: Install
+        run: "npm ci --omit=dev"
+      - name: Build
+        run: "npm run build"
         env:
           DIRECTUS_ENDPOINT: https://admin.uma.cafe
           DIRECTUS_TOKEN: ${{ secrets.DIRECTUS_TOKEN }}
-      - uses: andreiio/rclone-action@v1
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          args: sync dist r2:uma-cafe-main
-        env:
-          RCLONE_CONFIG_R2_TYPE: s3
-          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
-          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
-          RCLONE_CONFIG_R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          path: dist
+
+  deploy:
+    name: Deploy
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
