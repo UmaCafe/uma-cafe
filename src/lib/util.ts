@@ -26,3 +26,7 @@ export const MONTHS = new Map<number, string>([
     [11, "Nov"],
     [12, "Dec"],
 ]);
+
+export function title(k: string): string {
+    return k.charAt(0).toUpperCase() + k.substring(1).toLowerCase();
+}

@@ -1,0 +1,73 @@
+---
+import Opt from "@components/Opt.astro";
+import { file } from "@lib/cdn";
+import type { Horse } from "@lib/database";
+import { ordinalNumber, title } from "@lib/util";
+export type Props = {
+    horse: Horse;
+};
+
+const { horse } = Astro.props;
+
+if (!horse) return;
+---
+
+{
+    horse.pic ? (
+        <div class="center img-box">
+            <img src={file(horse.pic)} alt={horse.name_en} />
+        </div>
+    ) : undefined
+}
+<Opt title="Sex" text={horse.sex && title(horse.sex)} />
+<Opt
+    title="Record"
+    text={horse.num_races &&
+        `${horse.num_races} Races` +
+            (typeof horse.num_wins == "number"
+                ? `, ${horse.num_wins} Wins`
+                : "") +
+            (typeof horse.num_g1 == "number"
+                ? ` (${horse.num_g1} G1 Wins)`
+                : "")}
+/>
+<Opt
+    title="Notable Races"
+    text={horse.notable_results?.map(
+        (v) => `${ordinalNumber(v.placed)} - ${v.race_name} (${v.race_year})`,
+    )}
+/>
+<p class="links">
+    {
+        horse.wikipedia_jp ? (
+            <a href={horse.wikipedia_jp}>Wiki (JP)</a>
+        ) : undefined
+    }
+    {
+        horse.wikipedia_en ? (
+            <a href={horse.wikipedia_en}>Wiki (EN)</a>
+        ) : undefined
+    }
+    {horse.netkeiba ? <a href={horse.netkeiba}>Netkeiba</a> : undefined}
+</p>
+<Opt title="Trivia" text={horse.trivia?.map((t) => t.trivia)} />
+
+<style>
+    p.links {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    p.links a {
+        padding-right: 10px;
+    }
+
+    .img-box img {
+        border-radius: 8px;
+        max-width: 100%;
+    }
+
+    .center {
+        text-align: center;
+    }
+</style>

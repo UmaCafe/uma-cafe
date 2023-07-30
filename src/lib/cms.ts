@@ -8,8 +8,14 @@ export const directus = createDirectus<Database>(
     .with(authentication());
 directus.setToken(import.meta.env.DIRECTUS_TOKEN);
 
-export function forceObj<T, IDT extends string | number>(
-    obj: T | IDT
-): Exclude<T, IDT> {
-    return obj as Exclude<T, IDT>;
+export function forceObj<T>(
+    obj: T | string | number
+): Exclude<T, string | number> {
+    return obj as Exclude<T, string | number>;
 }
+
+export function forceArr<T>(
+    obj: T[] | string[] | number[]
+): Exclude<T, string[] | number[]>[] {
+    return obj as Exclude<T, string[] | number[]>[]
+};

@@ -1,0 +1,91 @@
+---
+import Opt from "@components/Opt.astro";
+import { file } from "@lib/cdn";
+import type { Seiyuu } from "@lib/database";
+export type Props = {
+    voiceUrl?: string;
+    seiyuu: Seiyuu;
+};
+
+const { voiceUrl, seiyuu } = Astro.props;
+if (!seiyuu) return;
+
+const seiyuuNameEN = seiyuu
+    ? seiyuu.use_full_name
+        ? seiyuu.full_name
+        : seiyuu.given_name + " " + seiyuu.family_name
+    : undefined;
+---
+
+{
+    voiceUrl && (
+        <div class="voice-box">
+            <audio controls src={voiceUrl}>
+                <track kind="captions" />
+            </audio>
+        </div>
+    )
+}
+<p class="center">
+    <strong>Voiced by:</strong>
+    {seiyuuNameEN}
+    {seiyuuNameEN != seiyuu?.name_jp ? `(${seiyuu?.name_jp})` : undefined}
+</p>
+{
+    seiyuu.pic && (
+        <div class="img-seiyuu center img-box">
+            <img src={file(seiyuu.pic)} alt={seiyuuNameEN} />
+        </div>
+    )
+}
+<p class="links">
+    {seiyuu.wikipedia_jp && <a href={seiyuu.wikipedia_jp}>Wiki (JP)</a>}
+    {seiyuu.wikipedia_en && <a href={seiyuu.wikipedia_en}>Wiki (EN)</a>}
+    {seiyuu.anilist && <a href={seiyuu.anilist}>Anilist</a>}
+    {seiyuu.mal && <a href={seiyuu.mal}>MAL</a>}
+    {
+        seiyuu.socials?.length ?? 0 > 0
+            ? seiyuu.socials.map((social) => (
+                  <a href={social.link}>{social.name}</a>
+              ))
+            : undefined
+    }
+</p>
+<Opt
+    title="Other Roles"
+    text={seiyuu.notable_roles?.map((v) => `${v.character} (${v.media})`)}
+/>
+
+<style>
+    .img-box img {
+        border-radius: 8px;
+        max-width: 100%;
+    }
+
+    .img-seiyuu img {
+        max-height: 200px;
+    }
+
+    .voice-box {
+        padding: 20px 0px;
+        text-align: center;
+    }
+
+    .voice-box audio {
+        max-width: 100%;
+        border-radius: 15px;
+    }
+
+    p.links {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    p.links a {
+        padding-right: 10px;
+    }
+
+    .center {
+        text-align: center;
+    }
+</style>

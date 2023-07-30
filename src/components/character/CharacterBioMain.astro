@@ -1,0 +1,122 @@
+---
+import Opt from "@components/Opt.astro";
+import TabBox from "@components/TabBox.astro";
+import type { Character, CharacterTranslation } from "@lib/database";
+import { MONTHS, title } from "@lib/util";
+
+export type Props = {
+    character: Character;
+    en: CharacterTranslation | undefined;
+    jp: CharacterTranslation | undefined;
+};
+
+const { character, en, jp } = Astro.props;
+
+const titled = character.prefers.map(title);
+const preferredGround = titled.filter((v) =>
+    ["turf", "dirt"].includes(v.toLowerCase()),
+);
+const preferredDistance = titled.filter((v) =>
+    ["short", "mile", "mid", "long"].includes(v.toLowerCase()),
+);
+const preferredStrategy = titled.filter((v) =>
+    ["escape", "leader", "betweener", "chaser"].includes(v.toLowerCase()),
+);
+---
+
+<Opt class="tagline" text={en?.tagline} />
+{en?.tagline && <hr class="about-hr" />}
+<Opt class="about" text={en?.about} />
+{en?.about && <hr class="about-hr" />}
+<TabBox
+    tabs={[
+        { val: "Profile", key: "profile" },
+        { val: "Trainers' Notes", key: "notes" },
+    ]}
+    panelColor={character.secondary_color}
+>
+    <div data-key="profile">
+        <Opt
+            title="Birthday"
+            text={character.birth_day &&
+                character.birth_month &&
+                `${MONTHS.get(character.birth_month)} ${character.birth_day}`}
+        />
+        <Opt
+            title="Class"
+            text={character.class && title(character.class) + " School"}
+        />
+        <Opt title="Dorm" text={character.dorm && title(character.dorm)} />
+        {
+            character.roommate && typeof character.roommate !== "string" && (
+                <p>
+                    <strong>Roommate:</strong>
+                    {character.roommate.visible ? (
+                        <a href={`/characters/${character.roommate.id}`}>
+                            {character.roommate.name_en}
+                        </a>
+                    ) : (
+                        `${character.roommate.name_en}`
+                    )}
+                </p>
+            )
+        }
+        <Opt title="Ears" text={en?.comment_ears} />
+        <Opt title="Tail" text={en?.comment_tail} />
+        <Opt title="Family" text={en?.comment_family} />
+        <Opt title="Secrets" text={en?.secrets?.map((v) => v.secret)} />
+        <Opt title="Trivia" text={character.trivia?.map((v) => v.trivia)} />
+    </div>
+    <div data-key="notes">
+        <Opt
+            title="Height"
+            text={character.height && `${character.height}cm`}
+        />
+        <Opt
+            title="Three Sizes"
+            text={character.bust &&
+                character.waist &&
+                character.hips &&
+                `B${character.bust} W${character.waist} H${character.hips}`}
+        />
+        <Opt
+            title="Shoe Size"
+            text={character.shoe_left &&
+                character.shoe_right &&
+                (character.shoe_left != character.shoe_right
+                    ? `L${character.shoe_left}cm, R${character.shoe_right}cm`
+                    : `${character.shoe_left}cm`)}
+        />
+        <Opt title="Weight" text={en?.weight} />
+        <Opt title="Preferred Ground" text={preferredGround.join(", ")} />
+        <Opt title="Preferred Distance" text={preferredDistance.join(", ")} />
+        <Opt title="Preferred Strategy" text={preferredStrategy.join(", ")} />
+        <Opt title="Strengths" text={en?.strengths} />
+        <Opt title="Weaknesses" text={en?.weaknesses} />
+        <Opt
+            title="Calls self"
+            text={en?.refers_self &&
+                en.refers_self +
+                    (jp?.refers_self ? ` (${jp?.refers_self})` : "")}
+        />
+        <Opt
+            title="Calls Trainer"
+            text={en?.refers_trainer &&
+                en.refers_trainer +
+                    (jp?.refers_trainer ? ` (${jp?.refers_trainer})` : "")}
+        />
+        <Opt title="Nicknames" text={en?.nicknames} />
+    </div>
+</TabBox>
+
+<style>
+    p.tagline {
+        font-style: italic;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .about-hr {
+        margin: 10px 0px;
+    }
+</style>
