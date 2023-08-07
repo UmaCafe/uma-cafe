@@ -65,7 +65,11 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
 }));
 ---
 
-<Layout title={album.name_en} description={songs.length + " Songs"}>
+<Layout
+    title={album.name_en}
+    description={songs.length + " Songs"}
+    image={file(album.album_cover)}
+>
     <div class="container">
         <h1>
             <ruby
