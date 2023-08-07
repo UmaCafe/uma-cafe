@@ -117,6 +117,36 @@ export interface Horse {
     pic: string | File;
 }
 
+export interface Album {
+    id: string;
+    visible: boolean;
+    name_jp: string;
+    name_en: string;
+    songs: number[] | AlbumSong[];
+    album_cover: string | File;
+    release_date: string;
+}
+
+export interface Song {
+    id: string;
+    name_jp: string;
+    name_en: string;
+}
+
+export interface AlbumSong {
+    id: number;
+    albums_id: string | Album;
+    songs_id: string | Song;
+    track_num: number;
+    singers: number[] | AlbumSongCharacter[];
+}
+
+export interface AlbumSongCharacter {
+    id: number;
+    albums_songs_id: number | AlbumSong;
+    characters_id: string | Character;
+}
+
 export interface Language {
     code: string;
     name: string;
@@ -129,5 +159,9 @@ export interface Database extends CoreSchema {
     characters_translations: CharacterTranslation[];
     seiyuu: Seiyuu[];
     horses: Horse[];
+    albums: Album[];
+    albums_songs: AlbumSong[];
+    albums_songs_characters: AlbumSongCharacter[];
+    songs: Song[];
     languages: Language[];
 }

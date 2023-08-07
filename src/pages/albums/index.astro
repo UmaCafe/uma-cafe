@@ -1,0 +1,67 @@
+---
+import { readItems } from "@directus/sdk";
+import Layout from "@layouts/Layout.astro";
+import { file } from "@lib/cdn";
+import { directus } from "@lib/cms";
+
+const albums = await directus.request(
+    readItems("albums", {
+        fields: ["*", { album_cover: ["filename_disk"] }],
+        filter: {
+            visible: {
+                _eq: true,
+            },
+        },
+    }),
+);
+---
+
+<Layout
+    title="Album List"
+    description="List of song albums in Umamusume: Pretty Derby"
+>
+    <div class="container">
+        <h1>Albums</h1>
+        <div class="albums">
+            {
+                albums.map((album) => (
+                    <div>
+                        <a href={`/albums/${album.id}`}>
+                            <img
+                                src={file(album.album_cover)}
+                                width="160"
+                                height="160"
+                                alt={album.name_en}
+                            />
+                        </a>
+                        <p>{album.name_en}</p>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .container {
+        padding: 10px 30px;
+    }
+
+    .albums {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .albums > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .albums > div p {
+        margin: 0;
+        max-width: 160px;
+    }
+    .albums > div img {
+        border-radius: 15px;
+    }
+</style>

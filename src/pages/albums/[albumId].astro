@@ -1,0 +1,159 @@
+---
+import { readItems } from "@directus/sdk";
+import Layout from "@layouts/Layout.astro";
+import { file } from "@lib/cdn";
+import { directus, forceArr, forceObj } from "@lib/cms";
+import type { GetStaticPaths } from "astro";
+
+export async function getAlbums() {
+    return directus.request(
+        readItems("albums", {
+            fields: [
+                "*",
+                {
+                    songs: [
+                        "*",
+                        {
+                            songs_id: ["*"],
+                            singers: [
+                                "*",
+                                {
+                                    characters_id: [
+                                        "id",
+                                        "visible",
+                                        "name_en",
+                                        "name_jp",
+                                        "main_color",
+                                        { icon: ["filename_disk"] },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    album_cover: ["filename_disk"],
+                },
+            ],
+            filter: {
+                visible: {
+                    _eq: true,
+                },
+            },
+        }),
+    );
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    const albums = await getAlbums();
+    return albums.map((album) => ({
+        params: { albumId: album.id },
+        props: { album },
+    }));
+};
+
+export type Props = {
+    album: Awaited<ReturnType<typeof getAlbums>>[0];
+};
+const { album } = Astro.props;
+
+const songs = forceArr(album.songs ?? []).map((song) => ({
+    ...song,
+    singers: forceArr(song.singers ?? []).map((singer) => ({
+        ...singer,
+        characters_id: forceObj(singer.characters_id),
+    })),
+    songs_id: forceObj(song.songs_id),
+}));
+---
+
+<Layout title={album.name_en} description={songs.length + " Songs"}>
+    <div class="container">
+        <h1>
+            <ruby
+                >{album.name_en}{
+                    album.name_en !== album.name_jp && <rt>{album.name_jp}</rt>
+                }</ruby
+            >
+        </h1>
+        <div class="cover">
+            <img
+                width="300"
+                src={file(album.album_cover)}
+                alt={album.name_en}
+            />
+            {
+                album.release_date && (
+                    <div>
+                        Release Date:{" "}
+                        {new Date(album.release_date).toLocaleString(
+                            undefined,
+                            { month: "short", year: "numeric", day: "numeric" },
+                        )}
+                    </div>
+                )
+            }
+        </div>
+        <ol class="songs">
+            {
+                songs.map((song) => (
+                    <li value={song.track_num}>
+                        <p>
+                            {song.songs_id.name_en}
+                            {song.songs_id.name_jp !==
+                                song.songs_id.name_en && (
+                                <span>「{song.songs_id.name_jp}」</span>
+                            )}
+                        </p>
+                        <div class="singers">
+                            {song.singers.map((singer) => (
+                                <a
+                                    href={
+                                        singer.characters_id.visible
+                                            ? `/characters/${singer.characters_id.id}`
+                                            : undefined
+                                    }
+                                >
+                                    <img
+                                        style={`border-color: ${singer.characters_id.main_color};`}
+                                        src={file(singer.characters_id.icon)}
+                                        alt={singer.characters_id.name_en}
+                                        title={`${singer.characters_id.name_en}`}
+                                        width="50"
+                                        height="50"
+                                    />
+                                </a>
+                            ))}
+                        </div>
+                    </li>
+                ))
+            }
+        </ol>
+    </div>
+</Layout>
+
+<style>
+    .container {
+        padding: 10px 30px;
+    }
+
+    .cover {
+        float: right;
+        padding: 10px;
+    }
+    .cover img {
+        border-radius: 15px;
+    }
+
+    li > p {
+        margin-bottom: 5px;
+    }
+
+    .singers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .singers img {
+        border: 2px solid;
+        border-radius: 50px;
+    }
+</style>

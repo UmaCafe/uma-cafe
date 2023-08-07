@@ -19,13 +19,13 @@ const characters = await directus.request(
                 _eq: true,
             },
         },
-    })
+    }),
 );
 ---
 
 <Layout
     title="Character List"
-    description="List of the characters in Uma Musume: Pretty Derby along with profile information."
+    description="List of the characters in Umamusume: Pretty Derby along with profile information."
 >
     <div class="char-container">
         <h1>Characters</h1>
@@ -48,34 +48,32 @@ const characters = await directus.request(
             }
         </div>
     </div>
-
-    <style>
-        .char-container {
-            padding: 10px 30px;
-        }
-
-        .char-list {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .char {
-            flex-basis: 0;
-            padding: 5px;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        a .inner {
-            transform: scale(1);
-            transition: transform 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
-        }
-
-        a:hover .inner {
-            transform: scale(0.96);
-        }
-    </style>
 </Layout>
+
+<style>
+    .char-container {
+        padding: 10px 30px;
+    }
+
+    .char-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .char {
+        flex-basis: 0;
+        padding: 5px;
+    }
+
+    a {
+        text-decoration: none;
+    }
+    a .inner {
+        transform: scale(1);
+        transition: transform 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+    }
+    a:hover .inner {
+        transform: scale(0.96);
+    }
+</style>
