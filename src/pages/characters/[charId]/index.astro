@@ -15,6 +15,7 @@ import type {
     Seiyuu,
 } from "@lib/database";
 import type { GetStaticPaths } from "astro";
+import { Icon } from "astro-icon";
 
 export async function getChars() {
     return directus.request(
@@ -38,18 +39,39 @@ export async function getChars() {
     );
 }
 
+export async function countImgs(charId: string) {
+    return (
+        await directus.request(
+            readItems("gallery_image", {
+                fields: [],
+                filter: {
+                    character_tags: {
+                        characters_id: { _contains: charId },
+                    },
+                },
+            }),
+        )
+    ).length;
+}
+
 export const getStaticPaths: GetStaticPaths = async () => {
     const characters = await getChars();
-    return characters.map((character) => ({
-        params: { charId: character.id },
-        props: { character },
-    }));
+    return Promise.all(
+        characters.map(async (character) => {
+            const galleryCount = await countImgs(character.id);
+            return {
+                params: { charId: character.id },
+                props: { character, galleryCount },
+            };
+        }),
+    );
 };
 
 export type Props = {
     character: Awaited<ReturnType<typeof getChars>>[0];
+    galleryCount: number;
 };
-const { character } = Astro.props;
+const { character, galleryCount } = Astro.props;
 
 const tls = forceArr(character.translations ?? []);
 const en: CharacterTranslation | undefined = tls.find(
@@ -132,6 +154,20 @@ if (character.counterpart)
                     ))
                 }
             </TabBox>
+            {
+                galleryCount > 0 && (
+                    <div class="gallery-link">
+                        <Icon
+                            name="clarity:image-gallery-solid"
+                            height="24"
+                            color={character.main_color}
+                        />
+                        <a href={`/characters/${character.id}/gallery`}>
+                            Image Gallery
+                        </a>
+                    </div>
+                )
+            }
         </div>
         <div class="desc">
             <TabBox tabs={descTabs} outlineColor={character.secondary_color}>
@@ -158,7 +194,9 @@ if (character.counterpart)
 
 <style>
     .image {
+        position: relative;
         padding: 20px;
+        padding-bottom: 40px;
         flex-grow: 1;
         border-radius: 10px;
     }
@@ -181,6 +219,17 @@ if (character.counterpart)
         left: 0;
         width: 100%;
         height: auto;
+    }
+
+    .gallery-link {
+        position: absolute;
+        left: 0;
+        right: 0;
+        display: flex;
+        margin-top: 5px;
+        gap: 5px;
+        justify-content: center;
+        align-items: center;
     }
 
     .title-container {

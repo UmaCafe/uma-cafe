@@ -147,6 +147,20 @@ export interface AlbumSongCharacter {
     characters_id: string | Character;
 }
 
+export interface GalleryImage {
+    id: string;
+    image: string | File;
+    caption: string;
+    character_tags: number[] | GalleryImageCharacter[];
+    image_tags: string[];
+}
+
+export interface GalleryImageCharacter {
+    id: number;
+    gallery_image_id: string | GalleryImage;
+    characters_id: string | Character;
+}
+
 export interface Language {
     code: string;
     name: string;
@@ -163,5 +177,7 @@ export interface Database extends CoreSchema {
     albums_songs: AlbumSong[];
     albums_songs_characters: AlbumSongCharacter[];
     songs: Song[];
+    gallery_image: GalleryImage[];
+    gallery_image_characters: GalleryImageCharacter[];
     languages: Language[];
 }

@@ -1,0 +1,156 @@
+---
+import InfoPanel from "@components/InfoPanel.astro";
+import { readItems } from "@directus/sdk";
+import Layout from "@layouts/Layout.astro";
+import { file } from "@lib/cdn";
+import { directus } from "@lib/cms";
+import type { GetStaticPaths } from "astro";
+import { Icon } from "astro-icon";
+
+export async function getChars() {
+    return directus.request(
+        readItems("characters", {
+            fields: ["*"],
+            filter: {},
+        }),
+    );
+}
+
+export async function getImages(charId: string) {
+    return directus.request(
+        readItems("gallery_image", {
+            fields: [
+                "*",
+                {
+                    image: ["*"],
+                    character_tags: [
+                        "*",
+                        { characters_id: ["id", "name_en", "icon"] },
+                    ],
+                },
+            ],
+            filter: {
+                character_tags: {
+                    characters_id: {
+                        _contains: charId,
+                    },
+                },
+            },
+            sort: "image",
+        }),
+    );
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    const characters = await getChars();
+    return (
+        await Promise.all(
+            characters.map(async (character) => {
+                const images = await getImages(character.id);
+                return {
+                    params: { charId: character.id },
+                    props: { character, images },
+                };
+            }),
+        )
+    ).filter((res) => res.props.images.length > 0);
+};
+
+export type Props = {
+    character: Awaited<ReturnType<typeof getChars>>[0];
+    images: Awaited<ReturnType<typeof getImages>>;
+};
+const { character, images } = Astro.props;
+---
+
+<Layout
+    title={`Gallery - ${character.name_en}`}
+    description={`Official Umamusume image gallery for ${character.name_en}`}
+>
+    <InfoPanel
+        mainColor={character.main_color}
+        subColor={character.secondary_color}
+        topBackgroundColor="#f5f5ff"
+        bottomBackgroundColor="#e9e9f9"
+    >
+        <div class="title-container" slot="title">
+            {
+                character.visible && (
+                    <div class="backlink">
+                        <Icon
+                            name="mdi:person-box"
+                            height="24"
+                            color={character.secondary_color}
+                        />
+                        <a href={`/characters/${character.id}`}>
+                            Character Page
+                        </a>
+                    </div>
+                )
+            }
+            <div class="title-box">
+                <h1>
+                    <ruby>{character.name_en}<rt>{character.name_jp}</rt></ruby>
+                </h1>
+                <h3>Image Gallery</h3>
+            </div>
+        </div>
+        <div class="imgs">
+            {
+                images.map((image) => (
+                    <div class:list={image.image_tags}>
+                        <img src={file(image.image)} title={image.caption} />
+                    </div>
+                ))
+            }
+        </div>
+    </InfoPanel>
+</Layout>
+
+<style>
+    .title-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .title-box {
+        padding: 10px 15px;
+        border-radius: 20px;
+        text-align: center;
+    }
+    .title-box > h3 {
+        font-style: italic;
+    }
+
+    @media (max-width: 600px) {
+        .title-box {
+            margin-top: 16px;
+        }
+    }
+
+    .backlink {
+        position: absolute;
+        left: 5px;
+        top: 5px;
+        display: flex;
+    }
+
+    .imgs {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .imgs img {
+        max-width: 100%;
+    }
+
+    h1,
+    h3 {
+        margin: 10px 0;
+    }
+</style>
