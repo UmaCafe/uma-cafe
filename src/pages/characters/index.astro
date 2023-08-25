@@ -8,7 +8,7 @@ import { directus } from "@lib/cms";
 const characters = await directus.request(
     readItems("characters", {
         fields: [
-            "id",
+            "slug",
             { icon: ["filename_disk"] },
             "name_en",
             "main_color",
@@ -33,7 +33,7 @@ const characters = await directus.request(
             {
                 characters.map((character) => (
                     <div class="char">
-                        <a href={`/characters/${character.id}`}>
+                        <a href={`/characters/${character.slug}`}>
                             <div class="inner">
                                 <CharacterIcon
                                     imageUrl={file(character.icon)}

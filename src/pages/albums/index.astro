@@ -26,7 +26,7 @@ const albums = await directus.request(
             {
                 albums.map((album) => (
                     <div>
-                        <a href={`/albums/${album.id}`}>
+                        <a href={`/albums/${album.slug}`}>
                             <img
                                 src={file(album.album_cover)}
                                 width="160"

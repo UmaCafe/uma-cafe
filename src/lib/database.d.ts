@@ -11,6 +11,7 @@ export interface Page {
 
 export interface Character {
     id: string;
+    slug: string;
     game_id: number;
     name_en: string;
     name_jp: string;
@@ -50,8 +51,8 @@ export interface Character {
 
 export interface CharacterTranslation {
     id: number;
-    characters_id: Character;
-    languages_id: Language;
+    characters_id: string | Character;
+    languages_id: string | Language;
     // bio
     epithet: string;
     introduction: string;
@@ -119,18 +120,24 @@ export interface Horse {
 
 export interface Album {
     id: string;
+    slug: string;
     visible: boolean;
     name_jp: string;
     name_en: string;
     songs: number[] | AlbumSong[];
     album_cover: string | File;
     release_date: string;
+    vgmdb: string;
+    amazon: string;
+    cdjapan: string;
 }
 
 export interface Song {
     id: string;
+    slug: string;
     name_jp: string;
     name_en: string;
+    song_type: string;
 }
 
 export interface AlbumSong {
@@ -138,6 +145,7 @@ export interface AlbumSong {
     albums_id: string | Album;
     songs_id: string | Song;
     track_num: number;
+    disc_num: number;
     singers: number[] | AlbumSongCharacter[];
 }
 

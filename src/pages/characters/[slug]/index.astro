@@ -60,7 +60,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
         characters.map(async (character) => {
             const galleryCount = await countImgs(character.id);
             return {
-                params: { charId: character.id },
+                params: { slug: character.slug },
                 props: { character, galleryCount },
             };
         }),
@@ -162,7 +162,7 @@ if (character.counterpart)
                             height="24"
                             color={character.main_color}
                         />
-                        <a href={`/characters/${character.id}/gallery`}>
+                        <a href={`/characters/${character.slug}/gallery`}>
                             Image Gallery
                         </a>
                     </div>

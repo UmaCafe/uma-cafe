@@ -52,7 +52,7 @@ const preferredStrategy = titled.filter((v) =>
                 <p>
                     <strong>Roommate:</strong>
                     {character.roommate.visible ? (
-                        <a href={`/characters/${character.roommate.id}`}>
+                        <a href={`/characters/${character.roommate.slug}`}>
                             {character.roommate.name_en}
                         </a>
                     ) : (

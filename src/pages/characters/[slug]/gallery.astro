@@ -48,7 +48,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
             characters.map(async (character) => {
                 const images = await getImages(character.id);
                 return {
-                    params: { charId: character.id },
+                    params: { slug: character.slug },
                     props: { character, images },
                 };
             }),
@@ -82,7 +82,7 @@ const { character, images } = Astro.props;
                             height="24"
                             color={character.secondary_color}
                         />
-                        <a href={`/characters/${character.id}`}>
+                        <a href={`/characters/${character.slug}`}>
                             Character Page
                         </a>
                     </div>
