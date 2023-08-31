@@ -161,6 +161,7 @@ export interface GalleryImage {
     caption: string;
     character_tags: number[] | GalleryImageCharacter[];
     image_tags: string[];
+    image_source: string;
 }
 
 export interface GalleryImageCharacter {

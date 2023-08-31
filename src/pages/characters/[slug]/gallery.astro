@@ -1,4 +1,5 @@
 ---
+import GalleryImage from "@components/GalleryImage.astro";
 import InfoPanel from "@components/InfoPanel.astro";
 import { readItems } from "@directus/sdk";
 import Layout from "@layouts/Layout.astro";
@@ -95,17 +96,39 @@ const { character, images } = Astro.props;
                 <h3>Image Gallery</h3>
             </div>
         </div>
-        <div class="imgs">
+        <div id="image-grid">
             {
                 images.map((image) => (
-                    <div class:list={image.image_tags}>
-                        <img src={file(image.image)} title={image.caption} />
+                    <div class:list={["item", ...(image.image_tags ?? [])]}>
+                        <GalleryImage
+                            id={image.id}
+                            url={file(image.image)}
+                            title={image.caption}
+                            source={image.image_source}
+                        />
                     </div>
                 ))
             }
         </div>
     </InfoPanel>
 </Layout>
+
+<script is:inline src="/scripts/masonry.pkgd.min.js"></script>
+<script is:inline src="/scripts/imagesloaded.pkgd.min.js"></script>
+<script is:inline>
+const grid = document.querySelector("#image-grid");
+const masonry = new Masonry(grid, {
+    itemSelector: "div.item",
+    columnWidth: 'div.item',
+    gutter: 10,
+    fitWidth: true,
+});
+
+window.imagesLoaded(grid, function () {
+    console.log('test');
+    masonry.layout();
+});
+</script>
 
 <style>
     .title-container {
@@ -137,16 +160,12 @@ const { character, images } = Astro.props;
         display: flex;
     }
 
-    .imgs {
+    #image-grid {
         display: flex;
-        flex-direction: column;
-        align-items: center;
+        flex-wrap: wrap;
+        width: 100%;
         gap: 10px;
-        padding: 10px;
-    }
-
-    .imgs img {
-        max-width: 100%;
+        margin: 10px auto;
     }
 
     h1,

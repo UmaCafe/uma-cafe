@@ -45,7 +45,7 @@ export async function getAlbums() {
 export const getStaticPaths: GetStaticPaths = async () => {
     const albums = await getAlbums();
     return albums.map((album) => ({
-        params: { albumId: album.id },
+        params: { slug: album.slug },
         props: { album },
     }));
 };
@@ -78,23 +78,37 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
                 }</ruby
             >
         </h1>
+        {
+            album.release_date && (
+                <div>
+                    Release Date:{" "}
+                    {new Date(album.release_date).toLocaleString(undefined, {
+                        month: "short",
+                        year: "numeric",
+                        day: "numeric",
+                    })}
+                </div>
+            )
+        }
         <div class="cover">
             <img
                 width="300"
                 src={file(album.album_cover)}
                 alt={album.name_en}
             />
-            {
-                album.release_date && (
-                    <div>
-                        Release Date:{" "}
-                        {new Date(album.release_date).toLocaleString(
-                            undefined,
-                            { month: "short", year: "numeric", day: "numeric" },
-                        )}
-                    </div>
-                )
-            }
+            <div class="links">
+                <div class="info-links">
+                    {album.vgmdb && <a href={album.vgmdb}>VGMdb</a>}
+                </div>
+                <div class="buy-links">
+                    {
+                        album.cdjapan && (
+                            <a href={album.cdjapan}>Buy on CDJapan</a>
+                        )
+                    }
+                    {album.amazon && <a href={album.amazon}>Buy on Amazon</a>}
+                </div>
+            </div>
         </div>
         <ol class="songs">
             {
@@ -145,6 +159,12 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
     }
     .cover img {
         border-radius: 15px;
+    }
+
+    .links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     li > p {

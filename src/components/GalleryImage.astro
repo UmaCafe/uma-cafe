@@ -1,0 +1,90 @@
+---
+export type Props = {
+    id: string;
+    url: string;
+    title: string;
+    source?: string | undefined;
+};
+
+const { id, url, title, source } = Astro.props;
+---
+
+<div class="icon" data-gallery-id=`img-${id}`>
+    <img src={url} title={title} alt={title} width="290" />
+</div>
+<dialog data-gallery-id=`img-${id}`>
+    <h1>{title}</h1>
+    {
+        source && (
+            <p>
+                Source:{" "}
+                <a href={source} target="_blank">
+                    {new URL(source).host}
+                </a>
+            </p>
+        )
+    }
+    <img src={url} title={title} alt={title} />
+</dialog>
+
+<script>
+    document.querySelectorAll(`div[data-gallery-id]`).forEach((el) => {
+        const div = el as HTMLDivElement;
+        div.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+
+            const diag = document.querySelector(
+                `dialog[data-gallery-id=${div.dataset.galleryId}]`,
+            ) as HTMLDialogElement;
+            if (diag) {
+                diag.showModal();
+                // prevent weird issue with highlighting the source link
+                (document.activeElement as HTMLElement)?.blur();
+            }
+        });
+    });
+
+    window.addEventListener("click", (ev) => {
+        const diag = document.querySelector(
+            "dialog[open]",
+        ) as HTMLDialogElement;
+        if (diag && diag == ev.target) {
+            diag.close();
+        }
+    });
+</script>
+
+<style>
+    .icon {
+        max-width: 100%;
+        transform: scale(1);
+        transition: transform 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+    }
+    .icon img {
+        border-radius: 5px;
+        max-width: 100%;
+    }
+    .icon:hover {
+        transform: scale(95%);
+        cursor: pointer;
+    }
+
+    dialog {
+        max-height: 80vh;
+        max-width: 95vw;
+        padding: 0 5px;
+        border: 3px solid #575;
+        border-radius: 10px;
+        background-color: #f5f5ff;
+        text-align: center;
+    }
+    dialog h1,
+    dialog p {
+        margin: 0;
+    }
+    dialog img {
+        border-radius: 5px;
+        max-height: 70vh;
+        max-width: 100%;
+    }
+</style>
