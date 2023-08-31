@@ -7,6 +7,7 @@ import { file } from "@lib/cdn";
 import { directus } from "@lib/cms";
 import type { GetStaticPaths } from "astro";
 import { Icon } from "astro-icon";
+import { IMAGE_TAG_LIST, IMAGE_TAG_NAMES } from "@lib/tags";
 
 export async function getChars() {
     return directus.request(
@@ -62,6 +63,10 @@ export type Props = {
     images: Awaited<ReturnType<typeof getImages>>;
 };
 const { character, images } = Astro.props;
+
+const availableTags = IMAGE_TAG_LIST.filter((v) =>
+    images.find((i) => i.image_tags?.includes(v)),
+);
 ---
 
 <Layout
@@ -96,10 +101,23 @@ const { character, images } = Astro.props;
                 <h3>Image Gallery</h3>
             </div>
         </div>
+        <div class="filters">
+            <label>
+                Filter to:
+                <select id="filter">
+                    <option value="">None</option>
+                    {
+                        availableTags.map((tag) => (
+                            <option value={tag}>{IMAGE_TAG_NAMES[tag]}</option>
+                        ))
+                    }
+                </select>
+            </label>
+        </div>
         <div id="image-grid">
             {
                 images.map((image) => (
-                    <div class:list={["item", ...(image.image_tags ?? [])]}>
+                    <div class="item" data-tags={image.image_tags?.join(",")}>
                         <GalleryImage
                             id={image.id}
                             url={file(image.image)}
@@ -115,19 +133,40 @@ const { character, images } = Astro.props;
 
 <script is:inline src="/scripts/masonry.pkgd.min.js"></script>
 <script is:inline src="/scripts/imagesloaded.pkgd.min.js"></script>
-<script is:inline>
-const grid = document.querySelector("#image-grid");
-const masonry = new Masonry(grid, {
-    itemSelector: "div.item",
-    columnWidth: 'div.item',
-    gutter: 10,
-    fitWidth: true,
-});
 
-window.imagesLoaded(grid, function () {
-    console.log('test');
-    masonry.layout();
-});
+<script>
+    const grid = document.querySelector("#image-grid");
+    const masonry = new window.Masonry(grid, {
+        itemSelector: "div.item:not(.hidden)",
+        columnWidth: "div.item:not(.hidden)",
+        gutter: 10,
+        fitWidth: true,
+    });
+
+    window
+        .imagesLoaded(grid, function () {
+            masonry.layout();
+        })
+        .on("progress", function () {
+            masonry.layout();
+        });
+
+    document.querySelector("#filter")?.addEventListener("change", (ev) => {
+        const val = (ev.currentTarget as HTMLSelectElement).value;
+        document.querySelectorAll("div.item").forEach((el) => {
+            const div = el as HTMLDivElement;
+            let show = true;
+            if (val) {
+                show = div.dataset?.tags?.split(",").includes(val) ?? false;
+            }
+            if (show) {
+                div.classList.remove("hidden");
+            } else {
+                div.classList.add("hidden");
+            }
+        });
+        masonry.layout();
+    });
 </script>
 
 <style>
@@ -160,12 +199,23 @@ window.imagesLoaded(grid, function () {
         display: flex;
     }
 
+    .filters {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        padding: 5px 15px;
+    }
+
     #image-grid {
         display: flex;
         flex-wrap: wrap;
         width: 100%;
         gap: 10px;
         margin: 10px auto;
+    }
+
+    .hidden {
+        display: none;
     }
 
     h1,
