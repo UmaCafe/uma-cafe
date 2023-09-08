@@ -24,6 +24,7 @@ export async function getAlbums() {
                                         "name_en",
                                         "name_jp",
                                         "main_color",
+                                        "secondary_color",
                                         { icon: ["filename_disk"] },
                                     ],
                                 },
@@ -33,11 +34,13 @@ export async function getAlbums() {
                     album_cover: ["filename_disk"],
                 },
             ],
-            filter: {
-                visible: {
-                    _eq: true,
-                },
-            },
+            filter: import.meta.env.DEV
+                ? {}
+                : {
+                      visible: {
+                          _eq: true,
+                      },
+                  },
         }),
     );
 }
@@ -45,7 +48,7 @@ export async function getAlbums() {
 export const getStaticPaths: GetStaticPaths = async () => {
     const albums = await getAlbums();
     return albums.map((album) => ({
-        params: { slug: album.slug },
+        params: { slug: album.slug ?? "null" },
         props: { album },
     }));
 };
@@ -131,7 +134,7 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
                                     }
                                 >
                                     <img
-                                        style={`border-color: ${singer.characters_id.main_color};`}
+                                        style={`--main: ${singer.characters_id.main_color}; --secondary: ${singer.characters_id.secondary_color}`}
                                         src={file(singer.characters_id.icon)}
                                         alt={singer.characters_id.name_en}
                                         title={`${singer.characters_id.name_en}`}
@@ -177,7 +180,11 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
         gap: 5px;
     }
     .singers img {
-        border: 2px solid;
+        background:
+            linear-gradient(transparent, transparent) padding-box,
+            linear-gradient(to top left, var(--main) 25%, var(--secondary))
+                border-box;
+        border: 2px solid transparent;
         border-radius: 50px;
     }
 </style>

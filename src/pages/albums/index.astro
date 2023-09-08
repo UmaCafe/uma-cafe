@@ -7,11 +7,14 @@ import { directus } from "@lib/cms";
 const albums = await directus.request(
     readItems("albums", {
         fields: ["*", { album_cover: ["filename_disk"] }],
-        filter: {
-            visible: {
-                _eq: true,
-            },
-        },
+        filter: import.meta.env.DEV
+            ? {}
+            : {
+                  visible: {
+                      _eq: true,
+                  },
+              },
+        sort: ["-release_date"],
     }),
 );
 ---

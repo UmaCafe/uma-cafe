@@ -1,16 +1,23 @@
 ---
+import { file } from "@lib/cdn";
+import type { File } from "@lib/database";
 export type Props = {
     id: string;
-    url: string;
     title: string;
     source?: string | undefined;
+    image: File;
 };
 
-const { id, url, title, source } = Astro.props;
+const { id, title, source, image } = Astro.props;
+
+const url = file(image);
+
+const ratio = (image.width ?? 1) / (image.height ?? 1);
+const height = Math.round(290 / ratio);
 ---
 
 <div class="icon" data-gallery-id=`img-${id}`>
-    <img src={url} title={title} alt={title} width="290" />
+    <img src={url} title={title} alt={title} width="290" height={height} />
 </div>
 <dialog data-gallery-id=`img-${id}`>
     <h1>{title}</h1>

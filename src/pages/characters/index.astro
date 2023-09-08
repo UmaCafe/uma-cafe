@@ -14,11 +14,14 @@ const characters = await directus.request(
             "main_color",
             "secondary_color",
         ],
-        filter: {
-            visible: {
-                _eq: true,
-            },
-        },
+        filter: import.meta.env.DEV
+            ? {}
+            : {
+                  visible: {
+                      _eq: true,
+                  },
+              },
+        limit: 999,
     }),
 );
 ---

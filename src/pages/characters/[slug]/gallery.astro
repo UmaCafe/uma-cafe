@@ -3,17 +3,17 @@ import GalleryImage from "@components/GalleryImage.astro";
 import InfoPanel from "@components/InfoPanel.astro";
 import { readItems } from "@directus/sdk";
 import Layout from "@layouts/Layout.astro";
-import { file } from "@lib/cdn";
-import { directus } from "@lib/cms";
+import { directus, forceObj } from "@lib/cms";
+import { IMAGE_TAG_LIST, IMAGE_TAG_NAMES } from "@lib/tags";
 import type { GetStaticPaths } from "astro";
 import { Icon } from "astro-icon";
-import { IMAGE_TAG_LIST, IMAGE_TAG_NAMES } from "@lib/tags";
 
 export async function getChars() {
     return directus.request(
         readItems("characters", {
             fields: ["*"],
             filter: {},
+            limit: 999,
         }),
     );
 }
@@ -39,6 +39,7 @@ export async function getImages(charId: string) {
                 },
             },
             sort: "image",
+            limit: 999,
         }),
     );
 }
@@ -120,9 +121,9 @@ const availableTags = IMAGE_TAG_LIST.filter((v) =>
                     <div class="item" data-tags={image.image_tags?.join(",")}>
                         <GalleryImage
                             id={image.id}
-                            url={file(image.image)}
                             title={image.caption}
                             source={image.image_source}
+                            image={forceObj(image.image)}
                         />
                     </div>
                 ))
@@ -132,7 +133,6 @@ const availableTags = IMAGE_TAG_LIST.filter((v) =>
 </Layout>
 
 <script is:inline src="/scripts/masonry.pkgd.min.js"></script>
-<script is:inline src="/scripts/imagesloaded.pkgd.min.js"></script>
 
 <script>
     const grid = document.querySelector("#image-grid");
@@ -140,20 +140,11 @@ const availableTags = IMAGE_TAG_LIST.filter((v) =>
         itemSelector: "div.item:not(.hidden)",
         columnWidth: "div.item:not(.hidden)",
         gutter: 10,
-        fitWidth: true,
     });
-
-    window
-        .imagesLoaded(grid, function () {
-            masonry.layout();
-        })
-        .on("progress", function () {
-            masonry.layout();
-        });
 
     document.querySelector("#filter")?.addEventListener("change", (ev) => {
         const val = (ev.currentTarget as HTMLSelectElement).value;
-        document.querySelectorAll("div.item").forEach((el) => {
+        for (const el of document.querySelectorAll("div.item")) {
             const div = el as HTMLDivElement;
             let show = true;
             if (val) {
@@ -164,7 +155,7 @@ const availableTags = IMAGE_TAG_LIST.filter((v) =>
             } else {
                 div.classList.add("hidden");
             }
-        });
+        }
         masonry.layout();
     });
 </script>
@@ -211,7 +202,7 @@ const availableTags = IMAGE_TAG_LIST.filter((v) =>
         flex-wrap: wrap;
         width: 100%;
         gap: 10px;
-        margin: 10px auto;
+        margin: 10px 10px;
     }
 
     .hidden {

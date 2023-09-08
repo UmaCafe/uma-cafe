@@ -30,11 +30,14 @@ export async function getChars() {
                     voice: ["filename_disk"],
                 },
             ],
-            filter: {
-                visible: {
-                    _eq: true,
-                },
-            },
+            filter: import.meta.env.DEV
+                ? {}
+                : {
+                      visible: {
+                          _eq: true,
+                      },
+                  },
+            limit: 999,
         }),
     );
 }
@@ -49,6 +52,7 @@ export async function countImgs(charId: string) {
                         characters_id: { _contains: charId },
                     },
                 },
+                limit: 999,
             }),
         )
     ).length;
@@ -60,7 +64,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
         characters.map(async (character) => {
             const galleryCount = await countImgs(character.id);
             return {
-                params: { slug: character.slug },
+                params: { slug: character.slug ?? "null" },
                 props: { character, galleryCount },
             };
         }),
@@ -149,7 +153,12 @@ if (character.counterpart)
                 {
                     imageTabs.map((tab) => (
                         <div class="image-container" data-key={tab.key}>
-                            <img src={tab.url} alt={character.name_en} />
+                            <img
+                                src={tab.url}
+                                alt={character.name_en}
+                                width="750"
+                                height="1320"
+                            />
                         </div>
                     ))
                 }
@@ -180,7 +189,7 @@ if (character.counterpart)
                 </div>
                 <div data-key="voice">
                     <CharacterBioSeiyuu
-                        voiceUrl={file(character.voice)}
+                        voiceUrl={character.voice && file(character.voice)}
                         seiyuu={character.seiyuu as Seiyuu}
                     />
                 </div>
@@ -195,8 +204,7 @@ if (character.counterpart)
 <style>
     .image {
         position: relative;
-        padding: 20px;
-        padding-bottom: 40px;
+        padding: 20px 10px 40px 20px;
         flex-grow: 1;
         border-radius: 10px;
     }
@@ -247,7 +255,7 @@ if (character.counterpart)
     .desc {
         flex-basis: 0;
         flex-grow: 1;
-        padding: 20px;
+        padding: 20px 20px 20px 10px;
         margin-bottom: 0;
     }
 
