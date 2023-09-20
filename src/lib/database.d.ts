@@ -138,6 +138,7 @@ export interface Song {
     name_jp: string;
     name_en: string;
     song_type: string;
+    base_song: string | Song;
 }
 
 export interface AlbumSong {

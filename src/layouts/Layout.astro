@@ -135,8 +135,9 @@ export type Props = {
     }
 
     .brand a {
+        font-family: "UmaFont";
         font-size: 2rem;
-        font-weight: 700;
+        /* font-weight: 700; */
         text-decoration: none;
         color: #575;
     }
@@ -152,9 +153,10 @@ export type Props = {
     }
 
     .link a {
+        font-family: "UmaFont";
         color: #494;
         text-decoration: none;
-        font-weight: 600;
+        /* font-weight: 600; */
         font-size: 1.2rem;
     }
 
@@ -185,5 +187,10 @@ export type Props = {
 
     :global(body.dark) .background {
         background-image: url(/background/bg_dark.jpg);
+    }
+
+    @font-face {
+        font-family: "UmaFont";
+        src: url(/uma.otf);
     }
 </style>

@@ -66,6 +66,9 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
     })),
     songs_id: forceObj(song.songs_id),
 }));
+
+const numDiscs = Math.max(...songs.flatMap((v) => v.disc_num));
+const hasDrama = !!songs.find((v) => v.songs_id.song_type == "drama");
 ---
 
 <Layout
@@ -74,25 +77,10 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
     image={file(album.album_cover)}
 >
     <div class="container">
-        <h1>
-            <ruby
-                >{album.name_en}{
-                    album.name_en !== album.name_jp && <rt>{album.name_jp}</rt>
-                }</ruby
-            >
-        </h1>
-        {
-            album.release_date && (
-                <div>
-                    Release Date:{" "}
-                    {new Date(album.release_date).toLocaleString(undefined, {
-                        month: "short",
-                        year: "numeric",
-                        day: "numeric",
-                    })}
-                </div>
-            )
-        }
+        <div class="title">
+            <h1>{album.name_en}</h1>
+            {album.name_en != album.name_jp && <h2>「{album.name_jp}」</h2>}
+        </div>
         <div class="cover">
             <img
                 width="300"
@@ -113,47 +101,133 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
                 </div>
             </div>
         </div>
-        <ol class="songs">
+        <div class="extra">
             {
-                songs.map((song) => (
-                    <li value={song.track_num}>
-                        <p>
-                            {song.songs_id.name_en}
-                            {song.songs_id.name_jp !==
-                                song.songs_id.name_en && (
-                                <span>「{song.songs_id.name_jp}」</span>
-                            )}
-                        </p>
-                        <div class="singers">
-                            {song.singers.map((singer) => (
-                                <a
-                                    href={
-                                        singer.characters_id.visible
-                                            ? `/characters/${singer.characters_id.slug}`
-                                            : undefined
-                                    }
-                                >
-                                    <img
-                                        style={`--main: ${singer.characters_id.main_color}; --secondary: ${singer.characters_id.secondary_color}`}
-                                        src={file(singer.characters_id.icon)}
-                                        alt={singer.characters_id.name_en}
-                                        title={`${singer.characters_id.name_en}`}
-                                        width="50"
-                                        height="50"
-                                    />
-                                </a>
-                            ))}
-                        </div>
-                    </li>
-                ))
+                album.release_date && (
+                    <div>
+                        Release Date:{" "}
+                        {new Date(album.release_date).toLocaleString(
+                            undefined,
+                            {
+                                month: "short",
+                                year: "numeric",
+                                day: "numeric",
+                            },
+                        )}
+                    </div>
+                )
             }
-        </ol>
+            {
+                hasDrama && (
+                    <div>
+                        <label>
+                            <input id="show-drama" type="checkbox" />
+                            Show Drama Tracks
+                        </label>
+                    </div>
+                )
+            }
+        </div>
+        {
+            [...Array(numDiscs)].map((_, disc) => (
+                <>
+                    {numDiscs > 1 && <h3>Disc {disc + 1}</h3>}
+                    <ol class="songs">
+                        {songs
+                            .filter((v) => v.disc_num == disc + 1)
+                            .map((song) => (
+                                <li
+                                    value={song.track_num}
+                                    data-type={song.songs_id.song_type}
+                                >
+                                    <p class="song-name">
+                                        <span class="name-en">
+                                            {song.songs_id.name_en}
+                                        </span>
+                                        {song.songs_id.name_jp !==
+                                            song.songs_id.name_en && (
+                                            <span class="name-jp">
+                                                「{song.songs_id.name_jp}」
+                                            </span>
+                                        )}
+                                    </p>
+                                    <div class="singers">
+                                        {song.singers.map((singer) => (
+                                            <a
+                                                href={
+                                                    singer.characters_id.visible
+                                                        ? `/characters/${singer.characters_id.slug}`
+                                                        : undefined
+                                                }
+                                            >
+                                                <img
+                                                    style={`--main: ${singer.characters_id.main_color}; --secondary: ${singer.characters_id.secondary_color}`}
+                                                    src={file(
+                                                        singer.characters_id
+                                                            .icon,
+                                                    )}
+                                                    alt={
+                                                        singer.characters_id
+                                                            .name_en
+                                                    }
+                                                    title={`${singer.characters_id.name_en}`}
+                                                    width="50"
+                                                    height="50"
+                                                />
+                                            </a>
+                                        ))}
+                                    </div>
+                                </li>
+                            ))}
+                    </ol>
+                </>
+            ))
+        }
     </div>
 </Layout>
+
+<script>
+    function setDramaVisible(visible: boolean) {
+        for (let trackEl of document.querySelectorAll("*[data-type]")) {
+            const track = trackEl as HTMLElement;
+            if (track.dataset.type == "drama") {
+                if (visible) {
+                    track.classList.remove("hidden");
+                } else {
+                    track.classList.add("hidden");
+                }
+            }
+        }
+    }
+
+    for (let el of document.querySelectorAll("#show-drama")) {
+        el.addEventListener("change", (ev) => {
+            const checkbox = ev.currentTarget as HTMLInputElement;
+            setDramaVisible(checkbox.checked);
+        });
+    }
+    setDramaVisible(false);
+</script>
 
 <style>
     .container {
         padding: 10px 30px;
+    }
+
+    h1,
+    h2 {
+        margin: 0;
+    }
+    h2 {
+        font-weight: normal;
+    }
+    h3 {
+        margin-left: 0;
+        text-decoration: underline;
+    }
+
+    .title {
+        margin: 20px 0;
     }
 
     .cover {
@@ -164,6 +238,11 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
         border-radius: 15px;
     }
 
+    .extra {
+        display: flex;
+        gap: 20px;
+    }
+
     .links {
         display: flex;
         flex-direction: column;
@@ -172,6 +251,15 @@ const songs = forceArr(album.songs ?? []).map((song) => ({
 
     li > p {
         margin-bottom: 5px;
+    }
+
+    .songs > li::marker,
+    .song-name > .name-en {
+        font-weight: bold;
+    }
+
+    .hidden {
+        display: none;
     }
 
     .singers {
