@@ -32,6 +32,7 @@ const height = Math.round(290 / ratio);
         )
     }
     <img src={url} title={title} alt={title} />
+    <button class="close-button">Close</button>
 </dialog>
 
 <script>
@@ -59,6 +60,16 @@ const height = Math.round(290 / ratio);
             diag.close();
         }
     });
+
+    for (const button of document.querySelectorAll("button.close-button")) {
+        button.addEventListener("click", () => {
+            console.log("test");
+            const diag = document.querySelector(
+                "dialog[open]",
+            ) as HTMLDialogElement;
+            diag?.close();
+        });
+    }
 </script>
 
 <style>
@@ -93,5 +104,20 @@ const height = Math.round(290 / ratio);
         border-radius: 5px;
         max-height: 70vh;
         max-width: 100%;
+    }
+
+    .close-button {
+        font-size: larger;
+        font-family: "UmaFont";
+        position: fixed;
+        width: 80px;
+        height: 40px;
+        left: calc(50% - 40px);
+        bottom: 20px;
+    }
+    @media (min-width: 600px) {
+        .close-button {
+            display: none;
+        }
     }
 </style>

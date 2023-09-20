@@ -57,6 +57,11 @@ const characters = await directus.request(
     .char-container {
         padding: 10px 30px;
     }
+    @media (max-width: 600px) {
+        .char-container {
+            padding: 10px 8px;
+        }
+    }
 
     .char-list {
         display: flex;
