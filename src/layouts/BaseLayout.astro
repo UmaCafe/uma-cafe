@@ -7,7 +7,7 @@ export type Props = {
 
 const { title, description, image } = Astro.props;
 const url = Astro.url.toString();
-const canonical = url.endsWith("/") ? url.substring(0, url.length - 1) : url;
+const canonical = url.endsWith("/") ? url : url + '/';
 ---
 
 <!DOCTYPE html>
