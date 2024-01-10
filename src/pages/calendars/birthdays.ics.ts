@@ -37,6 +37,7 @@ export const get: APIRoute = async ({}) => {
             `2021/${character.birth_month}/${character.birth_day}`
         );
         calendar.createEvent({
+            id: `uma.cafe/birthday-${character.slug}`,
             start: date,
             allDay: true,
             timezone: "Asia/Tokyo",
