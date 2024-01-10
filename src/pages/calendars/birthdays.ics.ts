@@ -1,7 +1,10 @@
 import { readItems } from "@directus/sdk";
 import { directus, forceObj } from "@lib/cms";
 import type { APIRoute } from "astro";
-import ical, { ICalEventRepeatingFreq } from "ical-generator";
+import ical, {
+    ICalEventBusyStatus,
+    ICalEventRepeatingFreq,
+} from "ical-generator";
 
 export const get: APIRoute = async ({}) => {
     const calendar = ical({
@@ -38,13 +41,14 @@ export const get: APIRoute = async ({}) => {
             allDay: true,
             timezone: "Asia/Tokyo",
             summary: `${character.name_en}'${
-                character.name_en.endsWith("s") ? "" : "s"
+                character.name_en.toLowerCase().endsWith("s") ? "" : "s"
             } Birthday`,
             description: character.counterpart
                 ? `Born in ${forceObj(character.counterpart).birth_year}`
                 : "",
             repeating: { freq: ICalEventRepeatingFreq.YEARLY },
             url: `https://uma.cafe/characters/${character.slug}`,
+            busystatus: ICalEventBusyStatus.FREE,
         });
     }
 
