@@ -1,0 +1,32 @@
+---
+import Layout from "@layouts/Layout.astro";
+---
+
+<Layout
+    title="Calendar"
+    description="Calendar for all the Umamusume characters' birthdays!"
+>
+    <h1>Calendar</h1>
+    <div class="calendar">
+        <iframe
+            src="https://calendar.google.com/calendar/embed?height=600&wkst=1&bgcolor=%230B8043&ctz=Asia%2FTokyo&showTitle=0&showPrint=0&showCalendars=1&showTz=1&showTabs=1&src=MmU1cW12OXBuZ2FjdXZ2YzVtcXBzdmVlNmV2YnIwN3VAaW1wb3J0LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23B39DDB"
+            style="border:solid 1px #777"></iframe>
+    </div>
+    <div class="downloads">
+        <h2>Downloads</h2>
+        <a href="/calendars/birthdays.ics" download="umamusume_birthdays.ics"
+            >Birthdays (iCalendar Format)</a
+        >
+    </div>
+</Layout>
+
+<style>
+    .calendar {
+        padding-bottom: 10px;
+        width: 100%;
+    }
+    .calendar > iframe {
+        width: 100%;
+        height: 800px;
+    }
+</style>

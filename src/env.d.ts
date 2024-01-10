@@ -5,6 +5,6 @@ declare module "tsparticles" {
 }
 
 interface Window {
-    Masonry: class;
+    Masonry: any;
     imagesLoaded(grid, func): any;
 }
