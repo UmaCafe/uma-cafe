@@ -46,9 +46,36 @@ export type Props = {
     <div class="background">
         <ParticlesComponent />
     </div>
+
+    <div class="popup">
+        <p><strong>Hello, Visitor!</strong></p>
+        <p>
+            This site is being deprecated in favor of the new <a
+                href="https://umamusu.wiki">Umamusume Wiki</a
+            >!<br />All new content will be going there, and this page will
+            likely not be updated.
+        </p>
+        <button onclick="closePopup()">Close</button>
+    </div>
 </BaseLayout>
 
+<script is:inline>
+    function closePopup() {
+        document.querySelector(".popup").remove();
+    }
+</script>
+
 <style>
+    .popup {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 0 10px 5px;
+        background: #eef;
+        text-align: center;
+    }
+
     .container {
         margin-left: auto;
         margin-right: auto;
@@ -79,7 +106,9 @@ export type Props = {
         background-color: #f5f5ff;
         border-top-left-radius: 20px;
         border-top-right-radius: 20px;
-        box-shadow: 10px 10px 20px #ccd, -10px 10px 20px #ccd;
+        box-shadow:
+            10px 10px 20px #ccd,
+            -10px 10px 20px #ccd;
         color: #222;
         width: 100%;
         padding: 0 1rem;
